@@ -1,5 +1,5 @@
-use crate::movement::*;
 use crate::Either;
+use crate::movement::*;
 
 #[derive(Debug)]
 pub struct Player {
@@ -38,6 +38,7 @@ impl Player {
     }
 
     pub fn take_step(&mut self, map: &Location) {
+        // TODO: update this to also update real_position
         let tentative_position = match self.direction {
             Direction::North => GridPosition {
                 x: self.grid_position.x,
