@@ -1,6 +1,8 @@
+mod locations;
 mod movement;
 mod player;
 
+use crate::locations::*;
 use crate::movement::*;
 use crate::player::*;
 
@@ -132,7 +134,7 @@ impl Game {
 
 fn main() -> Result<()> {
     let location = Location::from_string(LEVEL_MAP, '.', '0');
-    let player = Player::new(&location, 6, 0, Direction::South, 6);
+    let player = Player::new(&location, 6, 0, DiscreteDirection::South, 6);
 
     let game = Game {
         player,

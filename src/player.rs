@@ -1,11 +1,12 @@
 use crate::Either;
+use crate::locations::*;
 use crate::movement::*;
 
 #[derive(Debug)]
 pub struct Player {
-    pub grid_position: GridPosition,
+    pub grid_position: DiscretePosition,
     pub real_position: RealPosition,
-    pub direction: Direction,
+    pub direction: DiscreteDirection,
     pub eyesight: usize,
     pub debug: String,
 }
@@ -15,11 +16,11 @@ impl Player {
         location: &Location,
         starting_x: usize,
         starting_y: usize,
-        direction: Direction,
+        direction: DiscreteDirection,
         eyesight: usize,
     ) -> Self {
         // TODO: isn't there a slicker way to do this? surely
-        let grid_position = match location.force_can_walk_on(&GridPosition {
+        let grid_position = match location.force_can_walk_on(&DiscretePosition {
             x: starting_x,
             y: starting_y,
         }) {
@@ -40,19 +41,19 @@ impl Player {
     pub fn take_step(&mut self, map: &Location) {
         // TODO: update this to also update real_position
         let tentative_position = match self.direction {
-            Direction::North => GridPosition {
+            DiscreteDirection::North => DiscretePosition {
                 x: self.grid_position.x,
                 y: (self.grid_position.y).saturating_sub(1),
             },
-            Direction::East => GridPosition {
+            DiscreteDirection::East => DiscretePosition {
                 x: self.grid_position.x + 1,
                 y: self.grid_position.y,
             },
-            Direction::South => GridPosition {
+            DiscreteDirection::South => DiscretePosition {
                 x: self.grid_position.x,
                 y: self.grid_position.y + 1,
             },
-            Direction::West => GridPosition {
+            DiscreteDirection::West => DiscretePosition {
                 x: (self.grid_position.x).saturating_sub(1),
                 y: self.grid_position.y,
             },
@@ -74,28 +75,28 @@ impl Player {
     //       (maybe even by just implementing Iterate? but surely simpler...)
     pub fn turn_left(&mut self) {
         self.direction = match self.direction {
-            Direction::North => Direction::West,
-            Direction::East => Direction::North,
-            Direction::South => Direction::East,
-            Direction::West => Direction::South,
+            DiscreteDirection::North => DiscreteDirection::West,
+            DiscreteDirection::East => DiscreteDirection::North,
+            DiscreteDirection::South => DiscreteDirection::East,
+            DiscreteDirection::West => DiscreteDirection::South,
         };
     }
 
     pub fn turn_right(&mut self) {
         self.direction = match self.direction {
-            Direction::North => Direction::East,
-            Direction::East => Direction::South,
-            Direction::South => Direction::West,
-            Direction::West => Direction::North,
+            DiscreteDirection::North => DiscreteDirection::East,
+            DiscreteDirection::East => DiscreteDirection::South,
+            DiscreteDirection::South => DiscreteDirection::West,
+            DiscreteDirection::West => DiscreteDirection::North,
         };
     }
 
     pub fn selfie(&self) -> char {
         match self.direction {
-            Direction::North => '⮝',
-            Direction::East => '⮞',
-            Direction::South => '⮟',
-            Direction::West => '⮜',
+            DiscreteDirection::North => '⮝',
+            DiscreteDirection::East => '⮞',
+            DiscreteDirection::South => '⮟',
+            DiscreteDirection::West => '⮜',
         }
     }
 
