@@ -98,12 +98,6 @@ impl Game {
             .split(rhs);
         let (rhs_top, rhs_middle, rhs_bottom) = (rhs_rows[0], rhs_rows[1], rhs_rows[2]);
 
-        // (1) FPV (first-person view)
-        let fpv_block = Block::bordered().title("Sight");
-        let fpv = Paragraph::new("[tbd]").centered();
-        frame.render_widget(&fpv_block, lhs);
-        frame.render_widget(fpv, fpv_block.inner(lhs));
-
         // (2) Speech
         let speech_block = Block::bordered().title("Hearing");
         let speech = Paragraph::new("Things have gone awry.").centered();
@@ -120,7 +114,7 @@ impl Game {
         )
         .centered();
         frame.render_widget(&map_block, rhs_middle);
-        frame.render_widget(map, map_block.inner(rhs_middle));
+        frame.render_widget(&map, map_block.inner(rhs_middle));
 
         // (4) Debug
         let debug_block = Block::bordered().title("Debug");
@@ -128,7 +122,18 @@ impl Game {
             .centered()
             .wrap(Wrap { trim: true });
         frame.render_widget(&debug_block, rhs_bottom);
-        frame.render_widget(debug, debug_block.inner(rhs_bottom));
+        frame.render_widget(&debug, debug_block.inner(rhs_bottom));
+
+        // (1) FPV (first-person view)
+        let fpv_block = Block::bordered().title("Sight");
+        let _fpv = Paragraph::new("[tbd]").centered();
+        frame.render_widget(&fpv_block, lhs);
+        // TODO: for now we're just gonna put more debug here
+        //frame.render_widget(fpv, fpv_block.inner(lhs));
+        let more_debug = Paragraph::new(format!("{}", self.player))
+            .centered()
+            .wrap(Wrap { trim: true });
+        frame.render_widget(&more_debug, fpv_block.inner(lhs));
     }
 }
 

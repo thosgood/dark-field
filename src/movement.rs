@@ -38,6 +38,10 @@ impl RealDirection {
             DiscreteDirection::West => RealDirection(PI),
         }
     }
+
+    pub fn unit_vector(&self) -> (f32, f32) {
+        (self.0.cos(), self.0.sin())
+    }
 }
 
 #[derive(Debug, Clone)]

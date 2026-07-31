@@ -1,9 +1,10 @@
 use crate::Either;
 use crate::locations::*;
 use crate::movement::*;
+use std::fmt;
 
 const WALKING_SPEED: f32 = 0.8;
-const TURNING_SPEED: f32 = 0.3;
+const TURNING_SPEED: f32 = std::f32::consts::FRAC_PI_8;
 
 #[derive(Debug)]
 pub struct Player {
@@ -13,6 +14,37 @@ pub struct Player {
     pub real_direction: RealDirection,
     pub eyesight: usize,
     pub debug: String,
+}
+
+impl fmt::Display for Player {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let step = self.real_direction.unit_vector();
+        let tentative_real_position = RealPosition {
+            x: self.real_position.x + step.0,
+            y: self.real_position.y + step.1,
+        };
+        let tentative_discrete_position = tentative_real_position.nearest_discrete_position();
+        write!(
+            f,
+            // TODO: fix this
+            "Real position: {:?}
+Real direction: {:?}
+Real direction vector: {:?}
+Next real step: {:?}\n
+Grid position: {:?}
+Grid direction: {:?}
+Next grid step: {:?}\n
+Debug: {:?}",
+            (self.real_position.x, self.real_position.y),
+            self.real_direction.0,
+            step,
+            (tentative_real_position.x, tentative_real_position.y),
+            (self.discrete_position.x, self.discrete_position.y),
+            self.discrete_direction,
+            (tentative_discrete_position.x, tentative_real_position.y),
+            self.debug,
+        )
+    }
 }
 
 impl Player {
@@ -45,35 +77,45 @@ impl Player {
     }
 
     pub fn take_step(&mut self, map: &Location) {
-        // TODO: update this to also update real_position
-        let tentative_position = match self.discrete_direction {
-            DiscreteDirection::North => DiscretePosition {
-                x: self.discrete_position.x,
-                y: (self.discrete_position.y).saturating_sub(1),
-            },
-            DiscreteDirection::East => DiscretePosition {
-                x: self.discrete_position.x + 1,
-                y: self.discrete_position.y,
-            },
-            DiscreteDirection::South => DiscretePosition {
-                x: self.discrete_position.x,
-                y: self.discrete_position.y + 1,
-            },
-            DiscreteDirection::West => DiscretePosition {
-                x: (self.discrete_position.x).saturating_sub(1),
-                y: self.discrete_position.y,
-            },
+        let step = self.real_direction.unit_vector();
+        let tentative_real_position = RealPosition {
+            x: self.real_position.x + step.0,
+            y: self.real_position.y + step.1,
         };
+        let tentative_discrete_position = tentative_real_position.nearest_discrete_position();
 
-        if !map.can_walk_on(&tentative_position) {
-            self.debug = format!("obstacle: {:?}", &tentative_position);
+        // // TODO: update this to also update real_position
+        // let tentative_discrete_position = match self.discrete_direction {
+        //     DiscreteDirection::North => DiscretePosition {
+        //         x: self.discrete_position.x,
+        //         y: (self.discrete_position.y).saturating_sub(1),
+        //     },
+        //     DiscreteDirection::East => DiscretePosition {
+        //         x: self.discrete_position.x + 1,
+        //         y: self.discrete_position.y,
+        //     },
+        //     DiscreteDirection::South => DiscretePosition {
+        //         x: self.discrete_position.x,
+        //         y: self.discrete_position.y + 1,
+        //     },
+        //     DiscreteDirection::West => DiscretePosition {
+        //         x: (self.discrete_position.x).saturating_sub(1),
+        //         y: self.discrete_position.y,
+        //     },
+        // };
+
+        if !map.can_walk_on(&tentative_discrete_position) {
+            self.debug = format!("obstacle: {:?}", &tentative_discrete_position);
         }
-        if !map.is_in_bounds(&tentative_position) {
+        if !map.is_in_bounds(&tentative_discrete_position) {
             self.debug = "out of bounds".to_string();
         }
 
-        if map.is_in_bounds(&tentative_position) && map.can_walk_on(&tentative_position) {
-            self.discrete_position = tentative_position;
+        if map.is_in_bounds(&tentative_discrete_position)
+            && map.can_walk_on(&tentative_discrete_position)
+        {
+            self.discrete_position = tentative_discrete_position;
+            self.real_position = tentative_real_position;
         }
     }
 
