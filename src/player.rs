@@ -4,7 +4,7 @@ use crate::movement::*;
 use std::fmt;
 
 const WALKING_SPEED: f32 = 0.8;
-const TURNING_SPEED: f32 = std::f32::consts::FRAC_PI_8;
+const TURNING_SPEED: f32 = std::f32::consts::FRAC_PI_4;
 
 #[derive(Debug)]
 pub struct Player {
@@ -26,7 +26,6 @@ impl fmt::Display for Player {
         let tentative_discrete_position = tentative_real_position.nearest_discrete_position();
         write!(
             f,
-            // TODO: fix this
             "Real position: {:?}
 Real direction: {:?}
 Real direction vector: {:?}
@@ -36,7 +35,7 @@ Grid direction: {:?}
 Next grid step: {:?}\n
 Debug: {:?}",
             (self.real_position.x, self.real_position.y),
-            self.real_direction.0,
+            (self.real_direction.0 * 180.0 / std::f32::consts::PI),
             step,
             (tentative_real_position.x, tentative_real_position.y),
             (self.discrete_position.x, self.discrete_position.y),

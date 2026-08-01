@@ -8,6 +8,9 @@ pub enum DiscreteDirection {
     West,
 }
 
+/// The real direction is the angle in radians, measured anti-clockwise from due east.
+/// Note that that the real direction pi/2, i.e. due north, should cause us to travel in
+/// the direction of *decreasing* y, due to the flipped y-coordinates in our map.
 #[derive(Debug)]
 pub struct RealDirection(pub f32);
 
@@ -15,9 +18,12 @@ impl RealDirection {
     pub fn nearest_discrete_direction(&self) -> DiscreteDirection {
         // We rotate the angle by pi/4 so that we can simply check which quadrant it
         // lies in, rather than which axis it's closest to.
-        let (sin, cos) = (self.0 + FRAC_PI_4).sin_cos();
-        let s_cos = cos.is_sign_positive();
-        let s_sin = sin.is_sign_positive();
+        let rotated = RealDirection(self.0 + FRAC_PI_4);
+        let unit_vector = rotated.unit_vector();
+        let s_cos = unit_vector.0.is_sign_positive();
+        // Recall that `RealDirection::unit_vector` flips the y-coordinate,
+        // so we need to compensate for that by flipping again here.
+        let s_sin = unit_vector.1.is_sign_negative();
         match (s_cos, s_sin) {
             // Bottom-left quadrant => West.
             (false, false) => DiscreteDirection::West,
@@ -40,7 +46,9 @@ impl RealDirection {
     }
 
     pub fn unit_vector(&self) -> (f32, f32) {
-        (self.0.cos(), self.0.sin())
+        // Recall that the y-axis is flipped in our map coordinates: increasing y
+        // means moving south!
+        (self.0.cos(), -self.0.sin())
     }
 }
 
