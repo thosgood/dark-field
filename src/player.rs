@@ -4,7 +4,7 @@ use crate::photos::*;
 
 use std::fmt;
 
-const WALKING_SPEED: f32 = 0.8;
+const WALKING_SPEED: f32 = 1.0;
 const TURNING_SPEED: f32 = std::f32::consts::FRAC_PI_4;
 
 #[derive(Debug)]
@@ -15,6 +15,7 @@ pub struct Player {
     pub real_direction: RealDirection,
     pub eyesight: usize,
     pub debug: String,
+    // TODO: pointer to map: &Location?
 }
 
 impl fmt::Display for Player {
@@ -146,7 +147,7 @@ impl Player {
 
     pub fn take_bird_photo(&self, map: &Location) -> BirdPhoto {
         let BirdPhoto(mut photo) =
-            map.take_bird_photo(&(self.discrete_position), self.eyesight, self.eyesight);
+            BirdPhoto::take_photo(map, &(self.discrete_position), self.eyesight, self.eyesight);
         // Because we specify photos as having centre points, but we access points
         // in a `Vec<Vec<_>>` by working from the top left, we always need to shift
         // by the (half) size of the photo (which, here, is given by `eyesight`).
@@ -155,6 +156,6 @@ impl Player {
     }
 
     pub fn take_eye_photo(&self, map: &Location) -> EyePhoto {
-        map.take_eye_photo()
+        EyePhoto::take_photo(map, &(self.discrete_position), &(self.real_direction))
     }
 }

@@ -1,5 +1,5 @@
 use crate::Either;
-use crate::movement::DiscretePosition;
+use crate::movement::*;
 use crate::photos::*;
 
 // We index ASCII maps in the same way we index `Photos::BirdPhoto`: like matrices.
@@ -129,50 +129,5 @@ impl Location {
         } else {
             false
         }
-    }
-
-    pub fn take_bird_photo(
-        &self,
-        centre: &DiscretePosition,
-        half_height: usize,
-        half_width: usize,
-    ) -> BirdPhoto {
-        // We interpret the half_height and half_width as excluding the space that
-        // the player occupies, i.e. every photo will be of odd height and odd width.
-        let photo_height = 2 * half_height + 1;
-        let photo_width = 2 * half_width + 1;
-
-        let mut cropped_photo: Vec<Vec<char>> = Vec::new();
-        let empty_space = self.empty_space;
-        // We build up the cropped photo by just checking if each coordinate is in bounds
-        // or not and then pushing the character at that coordinate or the `empty_space`
-        // character (respectively).
-        for j in 0..photo_height {
-            let mut cropped_line: Vec<char> = Vec::new();
-            for i in 0..photo_width {
-                let point_x = (centre.x + i)
-                    .checked_signed_diff(half_width)
-                    .expect("horizontal numbers should never be this big");
-                let point_y = (centre.y + j)
-                    .checked_signed_diff(half_height)
-                    .expect("vertical numbers should never be this big");
-                if let Some(point) = DiscretePosition::try_new(point_x, point_y) {
-                    if self.is_in_bounds(&point) {
-                        cropped_line.push(self.ascii_map[point.y][point.x]);
-                    } else {
-                        cropped_line.push(empty_space);
-                    }
-                } else {
-                    cropped_line.push(empty_space);
-                }
-            }
-            cropped_photo.push(cropped_line);
-        }
-
-        BirdPhoto(cropped_photo)
-    }
-
-    pub fn take_eye_photo(&self) -> EyePhoto {
-        EyePhoto(vec![vec!['a', 'b', 'c']])
     }
 }
