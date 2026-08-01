@@ -1,7 +1,9 @@
+mod fpv;
 mod locations;
 mod movement;
 mod player;
 
+use crate::fpv::*;
 use crate::locations::*;
 use crate::movement::*;
 use crate::player::*;

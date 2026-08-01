@@ -142,13 +142,13 @@ impl Player {
         }
     }
 
-    pub fn take_photo(&self, map: &Location) -> Photo {
-        let Photo(mut photo) =
+    pub fn take_photo(&self, map: &Location) -> BirdPhoto {
+        let BirdPhoto(mut photo) =
             map.take_photo(&(self.discrete_position), self.eyesight, self.eyesight);
         // Because we specify photos as having centre points, but we access points
         // in a `Vec<Vec<_>>` by working from the top left, we always need to shift
         // by the (half) size of the photo (which, here, is given by `eyesight`).
         photo[self.eyesight][self.eyesight] = self.selfie();
-        Photo(photo)
+        BirdPhoto(photo)
     }
 }

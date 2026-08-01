@@ -21,9 +21,9 @@ pub const LEVEL_MAP: &str = r#"......     0     0
 // top-left-most character being (0,0) and the bottom-right-most being (w, h),
 // where w = width and h = height. We realise this by modelling them as a list
 // of rows, where each row is a list of `char`.
-pub struct Photo(pub Vec<Vec<char>>);
+pub struct BirdPhoto(pub Vec<Vec<char>>);
 
-impl Photo {
+impl BirdPhoto {
     pub fn to_vec_string(&self) -> Vec<String> {
         self.0
             .iter()
@@ -75,7 +75,7 @@ impl Location {
         centre: &DiscretePosition,
         half_height: usize,
         half_width: usize,
-    ) -> Photo {
+    ) -> BirdPhoto {
         // We interpret the half_height and half_width as excluding the space that
         // the player occupies, i.e. every photo will be of odd height and odd width.
         let photo_height = 2 * half_height + 1;
@@ -108,7 +108,7 @@ impl Location {
             cropped_photo.push(cropped_line);
         }
 
-        Photo(cropped_photo)
+        BirdPhoto(cropped_photo)
     }
 
     pub fn force_in_bounds(
