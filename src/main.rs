@@ -32,7 +32,8 @@ impl<T> Either<T, T> {
 
 #[derive(PartialEq, Eq)]
 pub enum GameState {
-    Running,
+    Debug,
+    FPV,
     Quit,
 }
 
@@ -78,6 +79,12 @@ impl Game {
                 KeyCode::Char('q') => {
                     self.state = GameState::Quit;
                 }
+                KeyCode::Char('f') => {
+                    self.state = GameState::FPV;
+                }
+                KeyCode::Char('d') => {
+                    self.state = GameState::Debug;
+                }
                 _ => {}
             }
         }
@@ -86,11 +93,11 @@ impl Game {
 
     fn render(&self, frame: &mut Frame) {
         // +---------+------------+
-        // |         | (2) Speech |
+        // |         | (2)        |
         // |         +------------+
-        // | (1) FPV | (3) Map    |
+        // | (1)     | (3)        |
         // |         +------------+
-        // |         | (4) Debug  |
+        // |         | (4)        |
         // +---------+------------+
 
         let columns = Layout::default()
@@ -109,13 +116,11 @@ impl Game {
             .split(rhs);
         let (rhs_top, rhs_middle, rhs_bottom) = (rhs_rows[0], rhs_rows[1], rhs_rows[2]);
 
-        // (2) Speech
+        // Conversation.
         let speech_block = Block::bordered().title("Hearing");
         let speech = Paragraph::new("Things have gone awry.").centered();
-        frame.render_widget(&speech_block, rhs_top);
-        frame.render_widget(speech, speech_block.inner(rhs_top));
 
-        // (3) Map
+        // Map
         let map_block = Block::bordered().title("Map");
         let map = Paragraph::new(
             self.player
@@ -124,27 +129,44 @@ impl Game {
                 .join("\n"),
         )
         .centered();
+
+        // Controls
+        let controls_block = Block::bordered().title("Controls");
+        let controls = Paragraph::new(format!("[d] debug; [f] full FPV"))
+            .centered()
+            .wrap(Wrap { trim: true });
+
+        // FPV
+        let fpv_block = Block::bordered().title("Sight");
+        let fpv = Paragraph::new("[tbd]").centered();
+
+        // Debug
+        let debug_block = Block::bordered().title("Debug");
+        let debug = Paragraph::new(format!("{}", self.player))
+            .centered()
+            .wrap(Wrap { trim: true });
+
+        // Rendering
+        frame.render_widget(&speech_block, rhs_top);
+        frame.render_widget(speech, speech_block.inner(rhs_top));
+
         frame.render_widget(&map_block, rhs_middle);
         frame.render_widget(&map, map_block.inner(rhs_middle));
 
-        // (4) Debug
-        let debug_block = Block::bordered().title("Debug");
-        let debug = Paragraph::new(format!("{:?}", self.player))
-            .centered()
-            .wrap(Wrap { trim: true });
-        frame.render_widget(&debug_block, rhs_bottom);
-        frame.render_widget(&debug, debug_block.inner(rhs_bottom));
+        frame.render_widget(&controls_block, rhs_bottom);
+        frame.render_widget(&controls, controls_block.inner(rhs_bottom));
 
-        // (1) FPV (first-person view)
-        let fpv_block = Block::bordered().title("Sight");
-        let _fpv = Paragraph::new("[tbd]").centered();
-        frame.render_widget(&fpv_block, lhs);
-        // TODO: for now we're just gonna put more debug here
-        //frame.render_widget(fpv, fpv_block.inner(lhs));
-        let more_debug = Paragraph::new(format!("{}", self.player))
-            .centered()
-            .wrap(Wrap { trim: true });
-        frame.render_widget(&more_debug, fpv_block.inner(lhs));
+        match self.state {
+            GameState::Debug => {
+                frame.render_widget(&debug_block, lhs);
+                frame.render_widget(&debug, debug_block.inner(lhs));
+            }
+            GameState::FPV => {
+                frame.render_widget(&fpv_block, lhs);
+                frame.render_widget(&fpv, fpv_block.inner(lhs));
+            }
+            GameState::Quit => {}
+        };
     }
 }
 
@@ -155,7 +177,7 @@ fn main() -> Result<()> {
     let game = Game {
         player,
         location,
-        state: GameState::Running,
+        state: GameState::Debug,
     };
 
     ratatui::run(|terminal| game.run(terminal))
