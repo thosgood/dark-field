@@ -1,6 +1,8 @@
 use crate::Either;
 use crate::movement::DiscretePosition;
+use crate::photos::*;
 
+// We index ASCII maps in the same way we index `Photos::BirdPhoto`: like matrices.
 pub const LEVEL_MAP: &str = r#"......     0     0     
 ......   0    0    0  0
 ......      0  0   0   
@@ -16,21 +18,6 @@ pub const LEVEL_MAP: &str = r#"......     0     0
 ......quanto0id0ido0estq
 ......ic0sindum0ninser0
 ......floran0flaer0dost"#;
-
-// We think of `Map` and `Photo` as being indexed like matrices, i.e. with the
-// top-left-most character being (0,0) and the bottom-right-most being (w, h),
-// where w = width and h = height. We realise this by modelling them as a list
-// of rows, where each row is a list of `char`.
-pub struct BirdPhoto(pub Vec<Vec<char>>);
-
-impl BirdPhoto {
-    pub fn to_vec_string(&self) -> Vec<String> {
-        self.0
-            .iter()
-            .map(|line| line.iter().collect::<String>())
-            .collect::<Vec<String>>()
-    }
-}
 
 #[derive(Clone)]
 pub struct Location {
@@ -52,7 +39,7 @@ impl Location {
         }
     }
 
-    pub fn _max_width(&self) -> usize {
+    pub fn max_width(&self) -> usize {
         self.ascii_map
             .iter()
             .map(|line| line.len())
@@ -63,52 +50,11 @@ impl Location {
         self.ascii_map
             .iter()
             .map(|line| line.len())
-            .fold(self._max_width(), |acc, x| acc.min(x))
+            .fold(self.max_width(), |acc, x| acc.min(x))
     }
 
     pub fn _naive_height(&self) -> usize {
         self.ascii_map.len()
-    }
-
-    pub fn take_photo(
-        &self,
-        centre: &DiscretePosition,
-        half_height: usize,
-        half_width: usize,
-    ) -> BirdPhoto {
-        // We interpret the half_height and half_width as excluding the space that
-        // the player occupies, i.e. every photo will be of odd height and odd width.
-        let photo_height = 2 * half_height + 1;
-        let photo_width = 2 * half_width + 1;
-
-        let mut cropped_photo: Vec<Vec<char>> = Vec::new();
-        let empty_space = self.empty_space;
-        // We build up the cropped photo by just checking if each coordinate is in bounds
-        // or not and then pushing the character at that coordinate or the `empty_space`
-        // character (respectively).
-        for j in 0..photo_height {
-            let mut cropped_line: Vec<char> = Vec::new();
-            for i in 0..photo_width {
-                let point_x = (centre.x + i)
-                    .checked_signed_diff(half_width)
-                    .expect("horizontal numbers should never be this big");
-                let point_y = (centre.y + j)
-                    .checked_signed_diff(half_height)
-                    .expect("vertical numbers should never be this big");
-                if let Some(point) = DiscretePosition::try_new(point_x, point_y) {
-                    if self.is_in_bounds(&point) {
-                        cropped_line.push(self.ascii_map[point.y][point.x]);
-                    } else {
-                        cropped_line.push(empty_space);
-                    }
-                } else {
-                    cropped_line.push(empty_space);
-                }
-            }
-            cropped_photo.push(cropped_line);
-        }
-
-        BirdPhoto(cropped_photo)
     }
 
     pub fn force_in_bounds(
@@ -183,5 +129,50 @@ impl Location {
         } else {
             false
         }
+    }
+
+    pub fn take_bird_photo(
+        &self,
+        centre: &DiscretePosition,
+        half_height: usize,
+        half_width: usize,
+    ) -> BirdPhoto {
+        // We interpret the half_height and half_width as excluding the space that
+        // the player occupies, i.e. every photo will be of odd height and odd width.
+        let photo_height = 2 * half_height + 1;
+        let photo_width = 2 * half_width + 1;
+
+        let mut cropped_photo: Vec<Vec<char>> = Vec::new();
+        let empty_space = self.empty_space;
+        // We build up the cropped photo by just checking if each coordinate is in bounds
+        // or not and then pushing the character at that coordinate or the `empty_space`
+        // character (respectively).
+        for j in 0..photo_height {
+            let mut cropped_line: Vec<char> = Vec::new();
+            for i in 0..photo_width {
+                let point_x = (centre.x + i)
+                    .checked_signed_diff(half_width)
+                    .expect("horizontal numbers should never be this big");
+                let point_y = (centre.y + j)
+                    .checked_signed_diff(half_height)
+                    .expect("vertical numbers should never be this big");
+                if let Some(point) = DiscretePosition::try_new(point_x, point_y) {
+                    if self.is_in_bounds(&point) {
+                        cropped_line.push(self.ascii_map[point.y][point.x]);
+                    } else {
+                        cropped_line.push(empty_space);
+                    }
+                } else {
+                    cropped_line.push(empty_space);
+                }
+            }
+            cropped_photo.push(cropped_line);
+        }
+
+        BirdPhoto(cropped_photo)
+    }
+
+    pub fn take_eye_photo(&self) -> EyePhoto {
+        EyePhoto(vec![vec!['a', 'b', 'c']])
     }
 }

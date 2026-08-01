@@ -1,11 +1,11 @@
-mod fpv;
 mod locations;
 mod movement;
+mod photos;
 mod player;
 
-use crate::fpv::*;
 use crate::locations::*;
 use crate::movement::*;
+use crate::photos::*;
 use crate::player::*;
 
 use std::time::Duration;
@@ -124,7 +124,7 @@ impl Game {
         let map_block = Block::bordered().title("Map");
         let map = Paragraph::new(
             self.player
-                .take_photo(&self.location)
+                .take_bird_photo(&self.location)
                 .to_vec_string()
                 .join("\n"),
         )
@@ -138,7 +138,13 @@ impl Game {
 
         // FPV
         let fpv_block = Block::bordered().title("Sight");
-        let fpv = Paragraph::new("[tbd]").centered();
+        let fpv = Paragraph::new(
+            self.player
+                .take_eye_photo(&self.location)
+                .to_vec_string()
+                .join("\n"),
+        )
+        .centered();
 
         // Debug
         let debug_block = Block::bordered().title("Debug");
@@ -177,7 +183,7 @@ fn main() -> Result<()> {
     let game = Game {
         player,
         location,
-        state: GameState::Debug,
+        state: GameState::FPV,
     };
 
     ratatui::run(|terminal| game.run(terminal))
