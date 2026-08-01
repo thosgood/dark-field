@@ -1,4 +1,3 @@
-use crate::Either;
 use crate::locations::*;
 use crate::movement::*;
 use std::fmt;
@@ -54,14 +53,13 @@ impl Player {
         discrete_direction: DiscreteDirection,
         eyesight: usize,
     ) -> Self {
-        // TODO: isn't there a slicker way to do this? surely
-        let discrete_position = match location.force_can_walk_on(&DiscretePosition {
-            x: starting_x,
-            y: starting_y,
-        }) {
-            Either::Left(desired_point) => desired_point,
-            Either::Right(forced_point) => forced_point,
-        };
+        let discrete_position = location
+            .force_can_walk_on(&DiscretePosition {
+                x: starting_x,
+                y: starting_y,
+            })
+            .unwrap()
+            .clone();
         let real_position = RealPosition::from_discrete_position(&discrete_position);
         let real_direction = RealDirection::from_discrete_direction(&discrete_direction);
 
@@ -75,33 +73,18 @@ impl Player {
         }
     }
 
-    pub fn take_step(&mut self, map: &Location) {
+    pub fn plan_step(&mut self) -> (RealPosition, DiscretePosition) {
         let step = self.real_direction.unit_vector();
         let tentative_real_position = RealPosition {
-            x: self.real_position.x + step.0,
-            y: self.real_position.y + step.1,
+            x: self.real_position.x + step.0 * WALKING_SPEED,
+            y: self.real_position.y + step.1 * WALKING_SPEED,
         };
         let tentative_discrete_position = tentative_real_position.nearest_discrete_position();
+        (tentative_real_position, tentative_discrete_position)
+    }
 
-        // // TODO: update this to also update real_position
-        // let tentative_discrete_position = match self.discrete_direction {
-        //     DiscreteDirection::North => DiscretePosition {
-        //         x: self.discrete_position.x,
-        //         y: (self.discrete_position.y).saturating_sub(1),
-        //     },
-        //     DiscreteDirection::East => DiscretePosition {
-        //         x: self.discrete_position.x + 1,
-        //         y: self.discrete_position.y,
-        //     },
-        //     DiscreteDirection::South => DiscretePosition {
-        //         x: self.discrete_position.x,
-        //         y: self.discrete_position.y + 1,
-        //     },
-        //     DiscreteDirection::West => DiscretePosition {
-        //         x: (self.discrete_position.x).saturating_sub(1),
-        //         y: self.discrete_position.y,
-        //     },
-        // };
+    pub fn take_step(&mut self, map: &Location) {
+        let (tentative_real_position, tentative_discrete_position) = self.plan_step();
 
         if !map.can_walk_on(&tentative_discrete_position) {
             self.debug = format!("obstacle: {:?}", &tentative_discrete_position);

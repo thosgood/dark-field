@@ -19,6 +19,15 @@ pub enum Either<L, R> {
     Right(R),
 }
 
+impl<T> Either<T, T> {
+    pub fn unwrap(&self) -> &T {
+        match self {
+            Either::Left(left) => left,
+            Either::Right(right) => right,
+        }
+    }
+}
+
 #[derive(PartialEq, Eq)]
 pub enum GameState {
     Running,

@@ -1,19 +1,19 @@
 use crate::Either;
 use crate::movement::DiscretePosition;
 
-pub const LEVEL_MAP: &str = r#"......lorem0ipsum0dolor
-......sit0amet0luus0to0
-......quanto0id0ido0est
-......ic0sindum0ninser0
-......floran0flaer0dost......tfwnqein
-......lorem0ipsum0dolorntfeiwqnneifts]
-gtnfeisit0amet0luus0to0......tenifwqf
-d.....quanto0id0ido0est
-t.....ic0sindum0ninser0
-s.....floran0flaer0dost
-a.....lorem0ipsum0dolor
-kuicfasit0amet0luus0to0
-......quanto0id0ido0est
+pub const LEVEL_MAP: &str = r#"......     0     0     
+......   0    0    0  0
+......      0  0   0   
+......  0      0      0
+......      0     0    ......        
+......     0     0                   
+         0    0    0  0......        
+ .....      0id0ido0est
+ .....  0sindum0ninser0
+ .....      0flaer0dost
+ .....     0ipsum0dolor
+         0amet0luus0to0
+......quanto0id0ido0estq
 ......ic0sindum0ninser0
 ......floran0flaer0dost"#;
 
