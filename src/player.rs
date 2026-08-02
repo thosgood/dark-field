@@ -161,6 +161,7 @@ impl Player {
             &(self.discrete_position),
             &(self.real_direction),
             81,
+            self.eyesight,
             40,
             15,
         )

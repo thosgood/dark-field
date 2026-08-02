@@ -65,12 +65,12 @@ impl BirdPhoto {
 type EyePhotoColumn = Vec<char>;
 pub struct EyePhoto(pub Vec<EyePhotoColumn>);
 
-// TODO: these single characters should eventually be replaced with arrays (for distance rendering)
-const EMPTY_SPACE_CHAR: char = '.';
-const OBSTACLE_CHAR: char = '0';
-const FLOOR_CHAR: char = '-';
-
 impl EyePhoto {
+    // TODO: these single characters should eventually be replaced with arrays (for distance rendering)
+    const EMPTY_SPACE_CHAR: char = '.';
+    const OBSTACLE_CHAR: char = '0';
+    const FLOOR_CHAR: char = '-';
+
     pub fn max_height(&self) -> usize {
         self.0
             .iter()
@@ -104,12 +104,14 @@ impl EyePhoto {
         position: &DiscretePosition,
         direction: &RealDirection,
         fov: usize,
+        eyesight: usize,
         half_width: usize,
         half_height: usize,
     ) -> EyePhoto {
         let epsilon = 0.5;
         // We're not gonna worry about overflow or anything safe like that.
         let fov = fov as f64;
+        let eyesight = eyesight as f64;
         // To get (2*half_width + 1) columns, we need to cast that many rays.
         let ray_directions = (0..=(2 * half_width))
             .map(|n| direction.0.sin().asin() + (n as f64 - half_width as f64) / fov)
@@ -127,7 +129,7 @@ impl EyePhoto {
                 };
 
                 // TODO: another magic number (maybe use self.eyesight when calling this as a player?)
-                while distance < 10.0 {
+                while distance < eyesight {
                     let discrete_point = point.nearest_discrete_position();
                     let item = location.what_is_here(&discrete_point);
                     match item {
@@ -149,9 +151,14 @@ impl EyePhoto {
             })
             .collect::<Vec<_>>();
 
-        let distance_into_length =
-	    // TODO: fix any magic numbers
-            { |dist: f64| ((dist / 5.0).atan() * std::f64::consts::FRAC_PI_2 * (half_height as f64)).floor() as usize};
+        let distance_into_length = {
+            |dist: f64| {
+                ((2.0 * dist / eyesight).atan()
+                    * std::f64::consts::FRAC_PI_2
+                    * (half_height as f64))
+                    .floor() as usize
+            }
+        };
 
         // Finally, we "render" the columns.
         let columns: Vec<EyePhotoColumn> = what_how_far
@@ -161,16 +168,16 @@ impl EyePhoto {
                     // TODO: rewrite all the following to actually change the symbol depending on distance
                     LocationItem::EmptySpace => {
                         // Upper half.
-                        let mut column = iter::repeat(EMPTY_SPACE_CHAR)
+                        let mut column = iter::repeat(Self::EMPTY_SPACE_CHAR)
                             .take(half_height)
                             .collect::<EyePhotoColumn>();
                         // Lower half.
                         let breakpoint = distance_into_length(distance);
                         for i in 0..half_height {
                             if i <= breakpoint {
-                                column.push(EMPTY_SPACE_CHAR)
+                                column.push(Self::EMPTY_SPACE_CHAR)
                             } else {
-                                column.push(FLOOR_CHAR)
+                                column.push(Self::FLOOR_CHAR)
                             }
                         }
                         column
@@ -180,15 +187,15 @@ impl EyePhoto {
                         let breakpoint = distance_into_length(distance);
                         for i in 0..(half_height * 2) {
                             if i <= half_height.saturating_sub(breakpoint) {
-                                column.push(EMPTY_SPACE_CHAR);
+                                column.push(Self::EMPTY_SPACE_CHAR);
                             } else if i <= half_height + breakpoint {
-                                column.push(OBSTACLE_CHAR);
+                                column.push(Self::OBSTACLE_CHAR);
                             } else {
-                                column.push(FLOOR_CHAR);
+                                column.push(Self::FLOOR_CHAR);
                             }
                         }
                         // Upper half.
-                        let mut column = iter::repeat(OBSTACLE_CHAR)
+                        let mut column = iter::repeat(Self::OBSTACLE_CHAR)
                             .take(half_height)
                             .collect::<EyePhotoColumn>();
                         // Lower half.
