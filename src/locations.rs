@@ -2,21 +2,28 @@ use crate::Either;
 use crate::movement::*;
 
 // We index ASCII maps in the same way we index `Photos::BirdPhoto`: like matrices.
-pub const LEVEL_MAP: &str = r#"......                   
-......   0000000   0000  
-......      0  0   0     
-......  00     0   0  0  
-......     00     0      ......        
-......     0     00                  
-         000000    0  0......        
- .....         00000
- .....  0sindum0ninser0
- .....      0flaer0dost
- .....     0ipsum0dolor
-         0amet0luus0to0
-......quanto0id0ido0estq
-......ic0sindum0ninser0
-......floran0flaer0dost"#;
+pub const LEVEL_MAP: &str = r#".                          .                   
+.       0000000000000000   .
+.       0              0   .
+.    0000     000000   0   .
+.             000000   0   .
+.             000000   0   .
+.    0000              0   .
+.       0              0   .
+.       0          00000   .
+.       0          00      .
+.       0       00000      .
+.       0       00000      .
+.       0       00000     0.
+.       0       00000     0.
+.       0       00000     0.
+.       0       00000     0.
+.       0       00000     0.
+.00000000       00000     0.
+.0                        0.
+.0                        0.
+.00000000000000000000000000.
+.                          ."#;
 
 #[derive(PartialEq, Eq)]
 pub enum LocationItem {

@@ -103,14 +103,13 @@ impl EyePhoto {
         location: &Location,
         position: &DiscretePosition,
         direction: &RealDirection,
-        fov: usize,
         eyesight: usize,
         half_width: usize,
         half_height: usize,
     ) -> EyePhoto {
         let epsilon = 0.5;
         // We're not gonna worry about overflow or anything safe like that.
-        let fov = fov as f64;
+        let fov = (half_width * 2 + 1) as f64;
         let eyesight = eyesight as f64;
         // To get (2*half_width + 1) columns, we need to cast that many rays.
         let ray_directions = (0..=(2 * half_width))
