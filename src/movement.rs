@@ -1,4 +1,4 @@
-use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, PI};
+use std::f64::consts::{FRAC_PI_2, FRAC_PI_4, PI};
 
 #[derive(Debug)]
 pub enum DiscreteDirection {
@@ -12,7 +12,7 @@ pub enum DiscreteDirection {
 /// Note that that the real direction pi/2, i.e. due north, should cause us to travel in
 /// the direction of *decreasing* y, due to the flipped y-coordinates in our map.
 #[derive(Debug)]
-pub struct RealDirection(pub f32);
+pub struct RealDirection(pub f64);
 
 impl RealDirection {
     pub fn nearest_discrete_direction(&self) -> DiscreteDirection {
@@ -39,13 +39,13 @@ impl RealDirection {
     pub fn from_discrete_direction(direction: &DiscreteDirection) -> Self {
         match direction {
             DiscreteDirection::North => RealDirection(FRAC_PI_2),
-            DiscreteDirection::East => RealDirection(0f32),
+            DiscreteDirection::East => RealDirection(0f64),
             DiscreteDirection::South => RealDirection(-FRAC_PI_2),
             DiscreteDirection::West => RealDirection(PI),
         }
     }
 
-    pub fn unit_vector(&self) -> (f32, f32) {
+    pub fn unit_vector(&self) -> (f64, f64) {
         // Recall that the y-axis is flipped in our map coordinates: increasing y
         // means moving south!
         (self.0.cos(), -self.0.sin())
@@ -76,16 +76,16 @@ impl DiscretePosition {
 
 #[derive(Debug)]
 pub struct RealPosition {
-    pub x: f32,
-    pub y: f32,
+    pub x: f64,
+    pub y: f64,
 }
 
 impl RealPosition {
     pub fn from_discrete_position(discrete_position: &DiscretePosition) -> Self {
         // TODO: check this is ok? what is the usize is too big...
         RealPosition {
-            x: discrete_position.x as f32,
-            y: discrete_position.y as f32,
+            x: discrete_position.x as f64,
+            y: discrete_position.y as f64,
         }
     }
 

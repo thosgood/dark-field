@@ -57,7 +57,9 @@ impl BirdPhoto {
     }
 }
 
-// TODO: EyePhoto isn't really indexed: it's columns of data.
+// Unlike `BirdPhoto`, we interpret `EyePhoto` as a list of *columns* of characters.
+// This means that when we want to display it (with `to_vec_string`) we will need to
+// do some sort of transpose type operation.
 type EyePhotoColumn = Vec<char>;
 pub struct EyePhoto(pub Vec<EyePhotoColumn>);
 
@@ -94,8 +96,43 @@ impl EyePhoto {
         location: &Location,
         position: &DiscretePosition,
         direction: &RealDirection,
+        fov: usize,
+        half_width: usize,
+        half_height: usize,
     ) -> EyePhoto {
-        // TODO: raycast, i guess?
+        let epsilon = 0.5;
+        // We're not gonna worry about overflow or anything safe like that.
+        let fov = fov as f64;
+        // To get (2*half_width + 1) columns, we need to cast that many rays.
+        let ray_directions = (0..=(2 * half_width))
+            .map(|n| direction.0.sin().asin() + (n as f64 - half_width as f64) / fov)
+            .collect::<Vec<f64>>();
+        // Now we do some simple raycasting.
+        let what_how_far: Vec<(LocationItem, f64)> = ray_directions
+            .into_iter()
+            .map(|ray_direction| {
+                let delta = RealDirection(ray_direction).unit_vector();
+                let mut distance = epsilon;
+                let mut point = RealPosition {
+                    x: (position.x as f64) + epsilon * delta.0,
+                    y: (position.y as f64) + epsilon * delta.1,
+                };
+                while location.what_is_here(&(point.nearest_discrete_position()))
+                    == LocationItem::Floor
+                {
+                    point = RealPosition {
+                        x: point.x + epsilon * delta.0,
+                        y: point.y + epsilon * delta.1,
+                    };
+                    distance += epsilon;
+                }
+                (
+                    location.what_is_here(&(point.nearest_discrete_position())),
+                    distance,
+                )
+            })
+            .collect::<Vec<_>>();
+        // TODO: finish
         EyePhoto(vec![vec!['a', 'b', 'c']])
     }
 }

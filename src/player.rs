@@ -4,8 +4,8 @@ use crate::photos::*;
 
 use std::fmt;
 
-const WALKING_SPEED: f32 = 1.0;
-const TURNING_SPEED: f32 = std::f32::consts::FRAC_PI_4;
+const WALKING_SPEED: f64 = 1.0;
+const TURNING_SPEED: f64 = std::f64::consts::FRAC_PI_4;
 
 #[derive(Debug)]
 pub struct Player {
@@ -37,7 +37,7 @@ Grid direction: {:?}
 Next grid step: {:?}\n
 Debug: {:?}",
             (self.real_position.x, self.real_position.y),
-            (self.real_direction.0 * 180.0 / std::f32::consts::PI),
+            (self.real_direction.0 * 180.0 / std::f64::consts::PI),
             step,
             (tentative_real_position.x, tentative_real_position.y),
             (self.discrete_position.x, self.discrete_position.y),
@@ -89,7 +89,7 @@ impl Player {
     pub fn take_step(&mut self, map: &Location) {
         let (tentative_real_position, tentative_discrete_position) = self.plan_step();
 
-        if !map.can_walk_on(&tentative_discrete_position) {
+        if map.is_obstacle(&tentative_discrete_position) {
             self.debug = format!("obstacle: {:?}", &tentative_discrete_position);
         }
         if !map.is_in_bounds(&tentative_discrete_position) {
@@ -97,7 +97,7 @@ impl Player {
         }
 
         if map.is_in_bounds(&tentative_discrete_position)
-            && map.can_walk_on(&tentative_discrete_position)
+            && !map.is_obstacle(&tentative_discrete_position)
         {
             self.discrete_position = tentative_discrete_position;
             self.real_position = tentative_real_position;
@@ -116,7 +116,7 @@ impl Player {
 
     // TODO: can't you do something like Direction.x => Direction.(x-1) ?
     //       (maybe even by just implementing Iterate? but surely simpler...)
-    pub fn turn_discrete_left(&mut self) {
+    pub fn _turn_discrete_left(&mut self) {
         self.discrete_direction = match self.discrete_direction {
             DiscreteDirection::North => DiscreteDirection::West,
             DiscreteDirection::East => DiscreteDirection::North,
@@ -126,7 +126,7 @@ impl Player {
         self.real_direction = RealDirection::from_discrete_direction(&self.discrete_direction);
     }
 
-    pub fn turn_discrete_right(&mut self) {
+    pub fn _turn_discrete_right(&mut self) {
         self.discrete_direction = match self.discrete_direction {
             DiscreteDirection::North => DiscreteDirection::East,
             DiscreteDirection::East => DiscreteDirection::South,
@@ -156,6 +156,13 @@ impl Player {
     }
 
     pub fn take_eye_photo(&self, map: &Location) -> EyePhoto {
-        EyePhoto::take_photo(map, &(self.discrete_position), &(self.real_direction))
+        EyePhoto::take_photo(
+            map,
+            &(self.discrete_position),
+            &(self.real_direction),
+            90,
+            20,
+            15,
+        )
     }
 }

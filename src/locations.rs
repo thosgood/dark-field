@@ -1,16 +1,15 @@
 use crate::Either;
 use crate::movement::*;
-use crate::photos::*;
 
 // We index ASCII maps in the same way we index `Photos::BirdPhoto`: like matrices.
-pub const LEVEL_MAP: &str = r#"......     0     0     
-......   0    0    0  0
-......      0  0   0   
-......  0      0      0
-......      0     0    ......        
-......     0     0                   
-         0    0    0  0......        
- .....      0id0ido0est
+pub const LEVEL_MAP: &str = r#"......                   
+......   0000000   0000  
+......      0  0   0     
+......  00     0   0  0  
+......     00     0      ......        
+......     0     00                  
+         000000    0  0......        
+ .....         00000
  .....  0sindum0ninser0
  .....      0flaer0dost
  .....     0ipsum0dolor
@@ -18,6 +17,13 @@ pub const LEVEL_MAP: &str = r#"......     0     0
 ......quanto0id0ido0estq
 ......ic0sindum0ninser0
 ......floran0flaer0dost"#;
+
+#[derive(PartialEq, Eq)]
+pub enum LocationItem {
+    Obstacle,
+    EmptySpace,
+    Floor,
+}
 
 #[derive(Clone)]
 pub struct Location {
@@ -39,7 +45,7 @@ impl Location {
         }
     }
 
-    pub fn max_width(&self) -> usize {
+    pub fn _max_width(&self) -> usize {
         self.ascii_map
             .iter()
             .map(|line| line.len())
@@ -50,7 +56,7 @@ impl Location {
         self.ascii_map
             .iter()
             .map(|line| line.len())
-            .fold(self.max_width(), |acc, x| acc.min(x))
+            .fold(self._max_width(), |acc, x| acc.min(x))
     }
 
     pub fn _naive_height(&self) -> usize {
@@ -117,7 +123,8 @@ impl Location {
         }
     }
 
-    pub fn can_walk_on(&self, position: &DiscretePosition) -> bool {
+    // Note that being an obstacle requires being in bounds.
+    pub fn is_obstacle(&self, position: &DiscretePosition) -> bool {
         if self.is_in_bounds(position) {
             let character = self
                 .ascii_map
@@ -125,9 +132,19 @@ impl Location {
                 .expect("`is_in_bounds` made a mistake")
                 .get(position.x)
                 .expect("`is_in_bounds` made a mistake");
-            *character != self.obstacle
+            *character == self.obstacle
         } else {
             false
         }
+    }
+
+    pub fn what_is_here(&self, position: &DiscretePosition) -> LocationItem {
+        if !self.is_in_bounds(position) {
+            return LocationItem::EmptySpace;
+        };
+        if self.is_obstacle(position) {
+            return LocationItem::Obstacle;
+        };
+        LocationItem::Floor
     }
 }

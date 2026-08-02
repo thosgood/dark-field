@@ -5,7 +5,6 @@ mod player;
 
 use crate::locations::*;
 use crate::movement::*;
-use crate::photos::*;
 use crate::player::*;
 
 use std::time::Duration;
