@@ -160,8 +160,8 @@ impl Player {
             map,
             &(self.discrete_position),
             &(self.real_direction),
-            90,
-            20,
+            81,
+            40,
             15,
         )
     }

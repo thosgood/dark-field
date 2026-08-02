@@ -20,8 +20,8 @@ pub const LEVEL_MAP: &str = r#"......
 
 #[derive(PartialEq, Eq)]
 pub enum LocationItem {
-    Obstacle,
     EmptySpace,
+    Obstacle,
     Floor,
 }
 

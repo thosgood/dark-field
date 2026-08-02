@@ -1,6 +1,8 @@
 use crate::locations::*;
 use crate::movement::*;
 
+use std::iter;
+
 // We think of BirdPhoto` as being indexed like a matrice, i.e. with the
 // top-left-most character being (0,0) and the bottom-right-most being (w, h),
 // where w = width and h = height. We realise this by modelling them as a list
@@ -63,6 +65,11 @@ impl BirdPhoto {
 type EyePhotoColumn = Vec<char>;
 pub struct EyePhoto(pub Vec<EyePhotoColumn>);
 
+// TODO: these single characters should eventually be replaced with arrays (for distance rendering)
+const EMPTY_SPACE_CHAR: char = '.';
+const OBSTACLE_CHAR: char = '0';
+const FLOOR_CHAR: char = '-';
+
 impl EyePhoto {
     pub fn max_height(&self) -> usize {
         self.0
@@ -107,6 +114,7 @@ impl EyePhoto {
         let ray_directions = (0..=(2 * half_width))
             .map(|n| direction.0.sin().asin() + (n as f64 - half_width as f64) / fov)
             .collect::<Vec<f64>>();
+
         // Now we do some simple raycasting.
         let what_how_far: Vec<(LocationItem, f64)> = ray_directions
             .into_iter()
@@ -117,14 +125,22 @@ impl EyePhoto {
                     x: (position.x as f64) + epsilon * delta.0,
                     y: (position.y as f64) + epsilon * delta.1,
                 };
-                while location.what_is_here(&(point.nearest_discrete_position()))
-                    == LocationItem::Floor
-                {
-                    point = RealPosition {
-                        x: point.x + epsilon * delta.0,
-                        y: point.y + epsilon * delta.1,
-                    };
-                    distance += epsilon;
+
+                // TODO: another magic number (maybe use self.eyesight when calling this as a player?)
+                while distance < 10.0 {
+                    let discrete_point = point.nearest_discrete_position();
+                    let item = location.what_is_here(&discrete_point);
+                    match item {
+                        LocationItem::EmptySpace => break,
+                        LocationItem::Obstacle => break,
+                        LocationItem::Floor => {
+                            point = RealPosition {
+                                x: point.x + epsilon * delta.0,
+                                y: point.y + epsilon * delta.1,
+                            };
+                            distance += epsilon;
+                        }
+                    }
                 }
                 (
                     location.what_is_here(&(point.nearest_discrete_position())),
@@ -132,7 +148,64 @@ impl EyePhoto {
                 )
             })
             .collect::<Vec<_>>();
-        // TODO: finish
-        EyePhoto(vec![vec!['a', 'b', 'c']])
+
+        let distance_into_length =
+	    // TODO: fix any magic numbers
+            { |dist: f64| ((dist / 5.0).atan() * std::f64::consts::FRAC_PI_2 * (half_height as f64)).floor() as usize};
+
+        // Finally, we "render" the columns.
+        let columns: Vec<EyePhotoColumn> = what_how_far
+            .into_iter()
+            .map(|(item, distance)| {
+                match item {
+                    // TODO: rewrite all the following to actually change the symbol depending on distance
+                    LocationItem::EmptySpace => {
+                        // Upper half.
+                        let mut column = iter::repeat(EMPTY_SPACE_CHAR)
+                            .take(half_height)
+                            .collect::<EyePhotoColumn>();
+                        // Lower half.
+                        let breakpoint = distance_into_length(distance);
+                        for i in 0..half_height {
+                            if i <= breakpoint {
+                                column.push(EMPTY_SPACE_CHAR)
+                            } else {
+                                column.push(FLOOR_CHAR)
+                            }
+                        }
+                        column
+                    }
+                    LocationItem::Obstacle => {
+                        let mut column: Vec<char> = Vec::new();
+                        let breakpoint = distance_into_length(distance);
+                        for i in 0..(half_height * 2) {
+                            if i <= half_height.saturating_sub(breakpoint) {
+                                column.push(EMPTY_SPACE_CHAR);
+                            } else if i <= half_height + breakpoint {
+                                column.push(OBSTACLE_CHAR);
+                            } else {
+                                column.push(FLOOR_CHAR);
+                            }
+                        }
+                        // Upper half.
+                        let mut column = iter::repeat(OBSTACLE_CHAR)
+                            .take(half_height)
+                            .collect::<EyePhotoColumn>();
+                        // Lower half.
+                        let mut lower_half = column.clone();
+                        lower_half.reverse();
+                        column.append(&mut lower_half);
+                        column
+                    }
+                    _ => {
+                        // TODO: this would be bad
+                        iter::repeat('!')
+                            .take(half_height * 2)
+                            .collect::<EyePhotoColumn>()
+                    }
+                }
+            })
+            .collect::<Vec<_>>();
+        EyePhoto(columns)
     }
 }
