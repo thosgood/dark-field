@@ -107,13 +107,14 @@ impl EyePhoto {
         half_width: usize,
         half_height: usize,
     ) -> EyePhoto {
-        let epsilon = 0.5;
-        // We're not gonna worry about overflow or anything safe like that.
-        let fov = (half_width * 2 + 1) as f64;
+        const EPSILON: f64 = 0.5;
+        // We're not gonna worry about overflow or anything like that.
+        const FOV_COEFFICIENT: f64 = 0.6;
+        let fov = (half_width as f64 + 0.5) * FOV_COEFFICIENT;
         let eyesight = eyesight as f64;
         // To get (2*half_width + 1) columns, we need to cast that many rays.
         let ray_directions = (0..=(2 * half_width))
-            .map(|n| direction.0.sin().asin() + (n as f64 - half_width as f64) / fov)
+            .map(|n| direction.0 + (n as f64 - half_width as f64) / fov)
             .collect::<Vec<f64>>();
 
         // Now we do some simple raycasting.
@@ -121,10 +122,10 @@ impl EyePhoto {
             .into_iter()
             .map(|ray_direction| {
                 let delta = RealDirection(ray_direction).unit_vector();
-                let mut distance = epsilon;
+                let mut distance = EPSILON;
                 let mut point = RealPosition {
-                    x: (position.x as f64) + epsilon * delta.0,
-                    y: (position.y as f64) + epsilon * delta.1,
+                    x: (position.x as f64) + EPSILON * delta.0,
+                    y: (position.y as f64) + EPSILON * delta.1,
                 };
 
                 // TODO: another magic number (maybe use self.eyesight when calling this as a player?)
@@ -136,10 +137,10 @@ impl EyePhoto {
                         LocationItem::Obstacle => break,
                         LocationItem::Floor => {
                             point = RealPosition {
-                                x: point.x + epsilon * delta.0,
-                                y: point.y + epsilon * delta.1,
+                                x: point.x + EPSILON * delta.0,
+                                y: point.y + EPSILON * delta.1,
                             };
-                            distance += epsilon;
+                            distance += EPSILON;
                         }
                     }
                 }
@@ -150,11 +151,12 @@ impl EyePhoto {
             })
             .collect::<Vec<_>>();
 
+        // Turn a distance into the percentage of the (half) column to render as obstacle
+        // and then into the actual number of characters.
         let distance_into_length = {
             |dist: f64| {
-                ((2.0 * dist / eyesight).atan()
-                    * std::f64::consts::FRAC_PI_2
-                    * (half_height as f64))
+                ((1f64 - (dist / eyesight).atan()) * (half_height as f64))
+                    .min(0f64)
                     .floor() as usize
             }
         };
@@ -180,6 +182,9 @@ impl EyePhoto {
                             }
                         }
                         column
+                        // iter::repeat(Self::EMPTY_SPACE_CHAR)
+                        //     .take(half_height * 2)
+                        //     .collect::<EyePhotoColumn>()
                     }
                     LocationItem::Obstacle => {
                         let mut column: Vec<char> = Vec::new();
@@ -202,13 +207,13 @@ impl EyePhoto {
                         lower_half.reverse();
                         column.append(&mut lower_half);
                         column
+                        // iter::repeat(Self::OBSTACLE_CHAR)
+                        //     .take(half_height * 2)
+                        //     .collect::<EyePhotoColumn>()
                     }
-                    _ => {
-                        // TODO: this would be bad
-                        iter::repeat('!')
-                            .take(half_height * 2)
-                            .collect::<EyePhotoColumn>()
-                    }
+                    LocationItem::Floor => iter::repeat('!')
+                        .take(half_height * 2)
+                        .collect::<EyePhotoColumn>(),
                 }
             })
             .collect::<Vec<_>>();
